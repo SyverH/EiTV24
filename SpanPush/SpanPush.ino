@@ -89,11 +89,19 @@ void loop(){
     serializeJson(doc, Serial);
     Serial.println("\n");
 
+    serializeJson(doc, messagePayload) + "\n";
+
+    Udp.beginPacket(Lab5eSpanIP, localPort);
+
+    Udp.write(messagePayload, strlen(messagePayload));
+
+    Udp.endPacket();
+
     delay(5000);
 
-    /* If not debug mode */
     #else
-    
+    /* If not debug mode */
+
     serializeJson(doc, messagePayload) + "\n";
 
     Udp.beginPacket(Lab5eSpanIP, localPort);
