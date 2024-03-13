@@ -2,7 +2,10 @@
 #include "arduino_secrets.h"
 
 #include <ArduinoJson.h>
+
+
 #include <ArduinoLowPower.h>
+#include <DHT.h>
 
 //#define DEBUG
 
@@ -22,6 +25,10 @@ const int JsonSize = 128;
 
 const int groundMoisturePin = A1;
 
+
+#define DHTPIN 7
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
 
 /* Constants for connection to SPAN */
 unsigned int localPort = 4200;      // local port to listen for UDP packets
@@ -48,9 +55,13 @@ void setup(){
 
     Serial.begin(9600);
     // Wait for Serial to be ready
+    
     while(!Serial){
         ;
     }
+
+    dht.begin();
+
 
     Serial.println("Connecting to SPAN...."); 
     boolean connected = false;
@@ -73,10 +84,15 @@ void loop(){
     int sensorValue = analogRead(groundMoisturePin);
     int moisturePercentage = map(sensorValue, drySensorValue, wetSensorValue, 100, 0);
 
+    float airTemp = dht.readTemperature(false);
+      float airHumidity = dht.readHumidity();
+
     // Adds the data source to the json document
     //doc["Source"] = "Arduino MKR 1500 NB";
     // Adds the groundMoisture value to the json document
     doc["Moisture"] = moisturePercentage;
+    doc["Temperature"] = airTemp;
+    doc["Humidity"] = airHumidity;
 
     /* Clear the messagePayload */
     char messagePayload[JsonSize] = "";
@@ -94,6 +110,7 @@ void loop(){
     Udp.beginPacket(Lab5eSpanIP, localPort);
 
     Udp.write(messagePayload, strlen(messagePayload));
+
 
     Udp.endPacket();
 
